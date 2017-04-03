@@ -43,6 +43,10 @@
             .thumbnail-list .thumbnail > img {
                 max-height:107px;
             }
+
+            .thumbnail-list .no-image {
+                margin-top: 50px;
+            }
         </style>
     </head>
     <body>
@@ -52,13 +56,15 @@
         <ul class="thumbnail-list">
             <li v-for="movie in movies" v-on:dragover.prevent="dragovermovie(movie, $event)" v-on:dragleave.prevent="dragleavemovie(movie, $event)" v-on:drop.prevent="dropmovie(movie, $event)"
                 v-bind:class="{ 'bg-primary' : movie.hover }" >
+                <div class="no-image pull-left">
+                    <h5>
+                        <span class="glyphicon glyphicon-picture"></span> {{movie.label}}
+                    </h5>
+                    <!-- <img src="https://www.placehold.it/350x150" alt="Image"> -->
+                </div>
                 <a href="#" class="thumbnail" v-if="movie.images.length">
                     <img v-bind:src="movie.images[0].src" alt="alt">
                 </a>
-                <div v-else>
-                    <span class="glyphicon glyphicon-picture"></span> {{movie.label}}
-                            <!-- <img src="https://www.placehold.it/350x150" alt="Image"> -->
-                </div>
             </li>
         </ul>
     </div>
@@ -79,17 +85,20 @@
             }
         },
         methods: {
+            autofilter: function (){
+
+                if(this.lastadd.length >= this.autoremove)
+                {
+                    var self = this;
+                    var deletecount = self.lastadd.length - self.autokeep;
+                    for(var i =0 ; i < deletecount ; i++)
+                        self.movies.splice(self.movies.indexOf(self.lastadd.shift()), 1);
+                }
+            },
             upload: function (movie, url){
                 movie.images.push({src: url});
-                var movies_withimages = this.movies.filter(function (movie){
-                    if(movie.images.length) return true;
-                    return false;
-                }).length;
-                if(this.autoremove > 0 && movies_withimages >= this.autoremove)
-                    this.movies = this.movies.filter(function (movie){
-                        return movie.images.length == 0;
-                    });
-//console.log(movies_withimages);
+                this.lastadd.push(movie);
+                this.autofilter();
             },
             dropmovie(movie, e){
                 console.log("drop", movie);
@@ -97,18 +106,16 @@
                 this.upload(movie, 'https://www.placehold.it/350x250');
             },
             dragovermovie(movie, e){
-// if(e.target.tagName != 'DIV') return;
                 movie.hover = true;
-                console.log(movie.hover);
             },
             dragleavemovie(movie, e){
-// if(e.target.tagName != 'DIV') return;
                 movie.hover = false;
-                console.log(movie.hover);
             }
         },
         data: {
-            autoremove: 5,
+            autoremove: 2,
+            autokeep: 1,
+            lastadd: [],
             movies: []
         }
     });
